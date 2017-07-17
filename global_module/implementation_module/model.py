@@ -88,7 +88,7 @@ class CNNClassification():
         self.input_matrix = tf.nn.embedding_lookup(self.word_emb_matrix, self.word_input, name="emb_lookup")
         self.sent_input_matrix = tf.expand_dims(self.input_matrix, -1)
 
-        # TODO
+        # TODO : complete the code
         #for i in range(len(self.params.num_filter)):
 
 
