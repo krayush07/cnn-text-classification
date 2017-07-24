@@ -7,11 +7,11 @@ class ParamsClass():
         self.init_scale = 0.1
         self.learning_rate = 0.01
         self.max_grad_norm = 5
-        self.max_epoch = 2
+        self.max_epoch = 150
         self.max_max_epoch = self.max_epoch
 
         if(mode == 'TR'):
-            self.keep_prob = 0.7
+            self.keep_prob = 0.6
         else:
             self.keep_prob = 1.0
 
@@ -23,11 +23,7 @@ class ParamsClass():
         if(mode == 'TE'):
             self.enable_shuffle = False
 
-        self.MAX_CONTEXT_SEQ_LENGTH = 80
-        self.MAX_UTT_SEQ_LENGTH = 60
-        self.NUM_CONTEXT = 2
-        self.CONTEXT_SEQ_HIDDEN_DIM = 200
-        self.UTT_SEQ_HIDDEN_DIM = 200
+        self.MAX_SEQ_LEN = 50
         self.EMB_DIM = 300
 
         self.batch_size = 32
@@ -42,14 +38,15 @@ class ParamsClass():
         self.indices = None
         self.num_instances = None
 
+        self.num_classes = 58
 
         ''' PARAMS FOR CONV BLOCK '''
-        self.num_filters = [64]
+        self.num_filters = [256]
         self.filter_width = [[2,3,5]]
         self.conv_activation = 'RELU'
-        self.conv_padding = 'SAME'
+        self.conv_padding = 'VALID'
 
-        self.pool_width = [2]
-        self.pool_stride = [1]
+        self.pool_width = [5]
+        self.pool_stride = [2]
         self.pool_padding = 'VALID'
         self.pool_option = 'MAX'

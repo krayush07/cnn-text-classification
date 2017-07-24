@@ -1,5 +1,4 @@
 import os
-from global_module.settings_module import set_params
 
 
 class Directory():
@@ -12,7 +11,7 @@ class Directory():
 
         self.root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         self.utility_dir = self.root_path + '/utility_dir'
-        self.curr_utility_dir = self.utility_dir + '/vanguard'
+        self.curr_utility_dir = self.utility_dir + '/folder1'
         self.preprocessing_dir = self.root_path + '/pre_processing'
 
         '''Directory to utility paths'''
@@ -38,8 +37,8 @@ class Directory():
             self.data_filename = self.data_path + '/tokenized_valid.txt'
             self.label_filename = self.data_path + '/label_valid.txt'
         elif(mode == 'TE'):
-            self.data_filename = self.data_path + '/tokenized_valid.txt'
-            self.label_filename = self.data_path + '/label_valid.txt'
+            self.data_filename = self.data_path + '/tokenized_test.txt'
+            self.label_filename = self.data_path + '/label_test.txt'
 
 
 
@@ -50,7 +49,7 @@ class Directory():
 
         ''' ****************** Directory to saving or loading a model ********************** '''''
         self.latest_checkpoint = 'checkpoint'
-        self.model_name = '/MetLife_19May_word_goal_pgm_inbuilt.ckpt'  # model name .ckpt is the model extension
+        self.model_name = '/classifier_vanguard.ckpt'  # model name .ckpt is the model extension
         ''' ********** ********* ******** ********* ********* ********* ******** ************* '''''
 
         self.test_cost_path = self.output_path + '/dummy.txt'  # test cost output
@@ -63,13 +62,10 @@ class Directory():
         self.word_embedding = self.vocab_path + '/word_embedding.csv'
         self.word_vocab_dict = self.vocab_path + '/word_vocab.pkl'
         self.glove_present_training_word_vocab = self.vocab_path + '/glove_present_training_word_vocab.pkl'
-        self.thought_embedding = self.vocab_path + '/thought_embedding.csv'
-        self.training_thought_vocab = self.vocab_path + '/training_thought_vocab.pkl'
-        self.glove_present_training_frame_word_vocab = self.vocab_path + '/glove_present_training_frame_word_vocab.pkl'
-
+        self.label_map_dict = self.vocab_path + '/label_map.pkl'
 
         ''' ****************** Directory for test model ********************** '''''
-        self.test_model_name = '/MetLife_19May_word_goal_pgm_inbuilt.ckpt'
+        self.test_model_name = '/classifier_vanguard.ckpt'
         self.test_model = self.model_path + self.test_model_name
 
 
