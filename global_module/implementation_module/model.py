@@ -25,11 +25,12 @@ class CNNClassification():
         with tf.variable_scope(name):
             weights = tf.get_variable(name='weights',
                                       shape=filter,
+                                      # initializer=tf.truncated_normal_initializer(stddev=0.1))
                                       initializer=tf.random_uniform_initializer(minval=-0.1, maxval=0.1))
 
             biases = tf.get_variable(name='biases',
                                      shape=filter[-1],
-                                     initializer=tf.constant_initializer(0.0))
+                                     initializer=tf.constant_initializer(0.01))
 
             # TODO: (done) --> check the data alignment (NHWC)
             conv = tf.nn.conv2d(name="convolution",
@@ -80,7 +81,8 @@ class CNNClassification():
 
             pool_output = self.pooling_layer(input=conv_output,
                                              pool_size=[1, self.params.pool_width[layer_num], 1, 1],
-                                             stride=[1, self.params.pool_stride[layer_num], 1, 1],
+                                             # stride=[1, self.params.pool_width[layer_num], self.params.pool_stride[layer_num], 1],
+                                             stride=[1, self.params.MAX_SEQ_LEN + 5 - filter_width + 1, 1, 1],
                                              padding=self.params.pool_padding,
                                              pool_option=self.params.pool_option,
                                              name="pool_layer_" + str(layer_num))
@@ -91,7 +93,9 @@ class CNNClassification():
         # return tf.reshape(tf.concat(pooled_output, axis=1), [self.params.batch_size, -1])
 
     def create_network_pipeline(self):
-        self.input_matrix = tf.nn.embedding_lookup(self.word_emb_matrix, self.word_input, name="emb_lookup")
+        padded_input = tf.pad(self.word_input, paddings=[[0, 0], [5, 0]])        #constant paading of N at start
+        # padded_input = self.word_input
+        self.input_matrix = tf.nn.embedding_lookup(self.word_emb_matrix, padded_input, name="emb_lookup")
         self.sent_input_matrix = tf.expand_dims(self.input_matrix, -1)
 
         curr_input = self.sent_input_matrix
@@ -99,21 +103,33 @@ class CNNClassification():
         for i in range(len(self.params.num_filters)):
             curr_output = self.conv_pool_block(i, curr_input)
 
-        pooled_output_flat = tf.reshape(curr_output, shape=[self.params.batch_size, -1], name='dense_layer_input_1')
-        dense_layer1 = tf.layers.dense(inputs=pooled_output_flat, units=256, activation=tf.nn.relu, name='dense_layer_1')
-        self.last_layer = tf.layers.dense(inputs=dense_layer1, units=128, activation=tf.nn.relu, name='dense_layer_2')
+        pooled_output_flat = tf.reshape(curr_output, shape=[self.params.batch_size, -1], name='pooled_falt')
+        pooled_output_flat = tf.nn.dropout(pooled_output_flat, keep_prob=self.params.keep_prob)
 
-        self.last_layer = tf.nn.dropout(self.last_layer, keep_prob=self.params.keep_prob)
+        dense_layer1 = tf.layers.dense(inputs=pooled_output_flat,
+                                       units=512,
+                                       activation=tf.nn.relu,
+                                       name='dense_layer_1')
+
+        # self.last_layer = tf.layers.dense(inputs=dense_layer1, units=self.params.num_classes, activation=tf.nn.relu, name='dense_layer_2')
+
+        # # self.last_layer = dense_layer1
+        self.last_layer = tf.nn.dropout(dense_layer1, keep_prob=self.params.keep_prob)
+        # self.last_layer = dense_layer1
 
     def compute_cost(self):
-        logits = tf.layers.dense(self.last_layer, units=self.params.num_classes, name='logits')
-        gold_labels = tf.one_hot(indices=self.label, depth=self.params.num_classes)
+        logits = tf.layers.dense(inputs=self.last_layer,
+                                 units=self.params.num_classes,
+                                 kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                 bias_initializer=tf.constant_initializer(0.01),
+                                 name='logits')
 
-        self.loss = tf.reduce_sum(tf.losses.softmax_cross_entropy(onehot_labels=gold_labels, logits=logits))
+        gold_labels = tf.one_hot(indices=self.label, depth=self.params.num_classes)
+        self.loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(labels=gold_labels, logits=logits), name='softmax_loss')
 
         if (self.params.mode == 'TR'):
             tvars = tf.trainable_variables()
-            l2_regularizer = tf.contrib.layers.l2_regularizer(scale=0.001, scope=None)
+            l2_regularizer = tf.contrib.layers.l2_regularizer(scale=self.params.REG_CONSTANT, scope=None)
             regularization_penalty = tf.contrib.layers.apply_regularization(l2_regularizer, tvars)
             reg_penalty_word_emb = tf.contrib.layers.apply_regularization(l2_regularizer, [self.word_emb_matrix])
             self.loss = self.loss + regularization_penalty - reg_penalty_word_emb
@@ -131,6 +147,8 @@ class CNNClassification():
 
         self.grads, _ = tf.clip_by_global_norm(tf.gradients(self.loss, tvars), self.params.max_grad_norm, name='global_norm')
         optimizer = tf.train.GradientDescentOptimizer(self.lr, name='optimizer')
+        # optimizer = tf.train.AdamOptimizer(learning_rate=1e-2, name='optimizer')
+        # optimizer = tf.train.AdadeltaOptimizer(learning_rate=self._lr, epsilon=1e-6, name='optimizer')
         self._train_op = optimizer.apply_gradients(zip(self.grads, tvars), name='apply_gradient')
 
     def assign_lr(self, session, lr_value):
@@ -148,7 +166,7 @@ class CNNClassification():
 def main():
     params = set_params.ParamsClass(mode='TR')
     dir_obj = set_dir.Directory('TR')
-    multi_view_obj = CNNClassification(params, dir_obj)
+    cnn_obj = CNNClassification(params, dir_obj)
 
 
 if __name__ == '__main__':

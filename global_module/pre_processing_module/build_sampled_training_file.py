@@ -22,13 +22,13 @@ def sample_train_file(raw_training_file, training_file, threshold):
         size = len(string)
         tokenized_training_string = ''
         for j in range(size):
-            string[j] = re.sub(r'#[0-9]+', r'', string[j].strip())
+            # string[j] = re.sub(r'#[0-9]+', r'', string[j].strip())
             tokenized_sent = string[j].split(" ")
             tokenized_string = ' '.join(tokenized_sent)
             tokenized_training_string += tokenized_string + '\t'
 
             for token in tokenized_sent:
-                if (word_dict.has_key(token) == False):
+                if token not in word_dict:
                     word_dict[token] = 1
                 else:
                     word_dict[token] += word_dict[token] + 1
@@ -48,20 +48,20 @@ def sample_train_file(raw_training_file, training_file, threshold):
                 # if(config.use_random_initializer):
                 #     modified_string += token + ' '
                 # else:
-                words = token.split("#")
-                if (word_dict[words[0]] <= threshold):
+                # words = token.split("#")
+                if word_dict[token] <= threshold:
                     # modified_string += 'UNK' + '#' + words[1] + ' '
                     modified_string += 'UNK' + ' '
-                    if (rare_words.has_key(words[0]) == False):
-                        rare_words[words[0]] = 1
+                    if token not in rare_words:
+                        rare_words[token] = 1
                         rare_words_count += 1
-                elif (config.use_unknown_word == True):
+                elif config.use_unknown_word:
                     modified_string += token + ' '
-                elif (glove_dict.has_key(words[0]) == False and config.use_random_initializer == False and config.use_unknown_word == False):
+                elif token not in glove_dict and not config.use_random_initializer and not config.use_unknown_word:
                     # modified_string += 'UNK' + '#' + words[1] + ' '
                     modified_string += 'UNK' + ' '
-                    if (rare_words.has_key(words[0]) == False):
-                        rare_words[words[0]] = 1
+                    if token not in rare_words:
+                        rare_words[token] = 1
                         rare_words_count += 1
                 else:
                     modified_string += token + ' '
@@ -74,11 +74,16 @@ def sample_train_file(raw_training_file, training_file, threshold):
         len(word_dict), rare_words_count))
 
 
-def main():
+def util():
     raw_training_file = set_dir.Directory('TR').raw_train_path
     training_file = set_dir.Directory('TR').data_filename
-    sample_train_file(raw_training_file, training_file, 1)
+    sample_train_file(raw_training_file, training_file, set_params.ParamsClass().sampling_threshold)
 
-
-if __name__ == '__main__':
-    main()
+# def main():
+#     raw_training_file = set_dir.Directory('TR').raw_train_path
+#     training_file = set_dir.Directory('TR').data_filename
+#     sample_train_file(raw_training_file, training_file, set_params.ParamsClass().sampling_threshold)
+#
+#
+# if __name__ == '__main__':
+#     main()

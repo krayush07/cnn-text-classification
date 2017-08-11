@@ -16,9 +16,13 @@ def generate_indexed_labels():
 
     print 'Total classes %d' %(len(label_hash))
 
-def main():
+def util():
     generate_indexed_labels()
 
-if __name__ == '__main__':
-    main()
+# def main():
+#     generate_indexed_labels()
+#
+#
+# if __name__ == '__main__':
+#     main()
 

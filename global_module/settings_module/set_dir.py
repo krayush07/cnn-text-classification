@@ -33,14 +33,12 @@ class Directory():
         self.data_filename = self.data_path + '/tokenized_train.txt'
         self.label_filename = self.data_path + '/label_train.txt'
 
-        if(mode == 'VA'):
+        if (mode == 'VA'):
             self.data_filename = self.data_path + '/tokenized_valid.txt'
             self.label_filename = self.data_path + '/label_valid.txt'
-        elif(mode == 'TE'):
+        elif (mode == 'TE'):
             self.data_filename = self.data_path + '/tokenized_test.txt'
             self.label_filename = self.data_path + '/label_test.txt'
-
-
 
         '''Directory to utility dataset'''
         self.goal_train_path = self.data_path + '/goal_train.txt'  # goal training file
@@ -53,8 +51,6 @@ class Directory():
         ''' ********** ********* ******** ********* ********* ********* ******** ************* '''''
 
         self.test_cost_path = self.output_path + '/dummy.txt'  # test cost output
-        self.test_candidate_answer = self.output_path + '/test_candidate_answer_lstm_3jan_word_stv_FAQ_avg_goal_testAUAA_testAUA_NEWRUN.txt'
-        self.test_last_transition_cost_path = self.output_path + '/test_last_cost_lstm_3jan_word_stv_FAQ_avg_goal_testAUAA_testAUA_NEWRUN.txt'
         self.clstm_vector_path = self.output_path + '/dummy_vector.txt'  # test vector output
 
         '''Directory to csv and pkl files'''
@@ -67,8 +63,6 @@ class Directory():
         ''' ****************** Directory for test model ********************** '''''
         self.test_model_name = '/cnn_classifier.ckpt'
         self.test_model = self.model_path + self.test_model_name
-
-
 
     def makedir(self, dirname):
         if not os.path.exists(dirname):

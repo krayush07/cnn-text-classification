@@ -8,6 +8,7 @@ from global_module.settings_module import set_params, set_dir, set_dict
 from global_module.implementation_module import model
 from global_module.implementation_module import reader
 
+
 # merged = tf.summary.merge_all()
 
 def run_epoch(session, eval_op, min_cost, model_obj, dict_obj, epoch_num, verbose=False):
@@ -33,25 +34,25 @@ def run_epoch(session, eval_op, min_cost, model_obj, dict_obj, epoch_num, verbos
                                                           model_obj.probabilities,
                                                           # model_obj.curr_accuracy,
                                                           eval_op],
-                                                         feed_dict = feed_dict)
+                                                         feed_dict=feed_dict)
 
         total_correct += np.sum(prediction == label_arr)
         total_instances += params.batch_size
         epoch_combined_loss += loss
 
-    print 'Epoch Num: %d, CE loss: %.4f, Accuracy: %.4f' % (epoch_num, (epoch_combined_loss), (total_correct/total_instances)*100)
+    print 'Epoch Num: %d, CE loss: %.4f, Accuracy: %.4f' % (epoch_num, (epoch_combined_loss), (total_correct / total_instances) * 100)
 
-
-    if(params.mode == 'VA'):
+    if (params.mode == 'VA'):
         model_saver = tf.train.Saver()
         print('**** Current minimum on valid set: %.4f ****' % (min_cost))
 
-        if(epoch_combined_loss < min_cost):
+        if (epoch_combined_loss < min_cost):
             min_cost = epoch_combined_loss
             model_saver.save(session, save_path=dir_obj.model_path + dir_obj.model_name, latest_filename=dir_obj.latest_checkpoint)
             print('==== Model saved! ====')
 
     return epoch_combined_loss, min_cost, min_cost
+
 
 def getLength(fileName):
     print('Reading :', fileName)
@@ -62,8 +63,8 @@ def getLength(fileName):
     dataFile.close()
     return count, np.arange(count)
 
-def run_train(dict_obj):
 
+def run_train(dict_obj):
     mode_train, mode_valid, mode_all = 'TR', 'VA', 'ALL'
 
     # train object
@@ -78,6 +79,8 @@ def run_train(dict_obj):
     dir_valid = set_dir.Directory(mode_valid)
     params_valid.num_instances, params_valid.indices = getLength(dir_valid.data_filename)
 
+    params_train.num_classes = params_valid.num_classes = len(dict_obj.label_dict)
+
     if (params_train.enable_shuffle):
         random.shuffle(params_train.indices)
         random.shuffle(params_valid.indices)
@@ -88,17 +91,15 @@ def run_train(dict_obj):
     word_emb_matrix = np.float32(np.genfromtxt(word_emb_path, delimiter=' '))
     params_train.vocab_size = params_valid.vocab_size = len(word_emb_matrix)
 
-
     print('***** INITIALIZING TF GRAPH *****')
 
     with tf.Graph().as_default(), tf.Session() as session:
         # train_writer = tf.summary.FileWriter(dir_train.log_path + '/train', session.graph)
         # test_writer = tf.summary.FileWriter(dir_train.log_path + '/test')
 
-        random_normal_initializer = tf.random_normal_initializer()
-        random_uniform_initializer = tf.random_uniform_initializer(-params_train.init_scale, params_train.init_scale)
+        # random_normal_initializer = tf.random_normal_initializer()
+        # random_uniform_initializer = tf.random_uniform_initializer(-params_train.init_scale, params_train.init_scale)
         xavier_initializer = tf.contrib.layers.xavier_initializer(uniform=True, seed=None, dtype=tf.float32)
-        # orthogonal_initializer = tf.orthogonal_initializer()
 
         with tf.name_scope('train'):
             with tf.variable_scope("model", reuse=None, initializer=xavier_initializer):
@@ -128,9 +129,11 @@ def run_train(dict_obj):
             lr_decay = params_train.lr_decay ** max(i - params_train.max_epoch, 0.0)
             train_obj.assign_lr(session, params_train.learning_rate * lr_decay)
 
+            # print(params_train.learning_rate * lr_decay)
+
             print('\n++++++++=========+++++++\n')
 
-            print("Epoch: %d Learning rate: %.3f" % (i + 1, session.run(train_obj.lr)))
+            print("Epoch: %d Learning rate: %.5f" % (i + 1, session.run(train_obj.lr)))
             train_loss, _, summary = run_epoch(session, train_obj.train_op, min_loss, train_obj, dict_obj, i, verbose=True)
             print("Epoch: %d Train loss: %.3f" % (i + 1, train_loss))
 
@@ -143,13 +146,14 @@ def run_train(dict_obj):
             curr_time = time.time()
             print('1 epoch run takes ' + str(((curr_time - start_time) / (i + 1)) / 60) + ' minutes.')
 
-    # train_writer.close()
-    # test_writer.close()
+        # train_writer.close()
+        # test_writer.close()
 
 
-def main():
-    dict_obj = set_dict.Dictionary()
-    run_train(dict_obj)
-
-if __name__ == "__main__":
-    main()
+# def main():
+#     dict_obj = set_dict.Dictionary()
+#     run_train(dict_obj)
+#
+#
+# if __name__ == "__main__":
+#     main()
