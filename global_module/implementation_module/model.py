@@ -46,7 +46,7 @@ class CNNClassification():
 
     def max_pool(self, input, pool_size, stride, padding, name):
         with tf.variable_scope(name):
-            return tf.nn.max_pool(name="avg_pool",
+            return tf.nn.max_pool(name="max_pool",
                                   value=input,
                                   ksize=pool_size,
                                   strides=stride,
@@ -108,7 +108,9 @@ class CNNClassification():
 
         dense_layer1 = tf.layers.dense(inputs=pooled_output_flat,
                                        units=512,
-                                       activation=tf.nn.relu,
+                                       activation=tf.nn.tanh,
+                                       kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                       bias_initializer=tf.constant_initializer(0.01),
                                        name='dense_layer_1')
 
         # self.last_layer = tf.layers.dense(inputs=dense_layer1, units=self.params.num_classes, activation=tf.nn.relu, name='dense_layer_2')
@@ -124,15 +126,19 @@ class CNNClassification():
                                  bias_initializer=tf.constant_initializer(0.01),
                                  name='logits')
 
-        gold_labels = tf.one_hot(indices=self.label, depth=self.params.num_classes)
-        self.loss = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(labels=gold_labels, logits=logits), name='softmax_loss')
+        # gold_labels = tf.one_hot(indices=self.label, depth=self.params.num_classes)
+        self.loss = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.label, logits=logits), name='softmax_loss')
 
         if (self.params.mode == 'TR'):
             tvars = tf.trainable_variables()
             l2_regularizer = tf.contrib.layers.l2_regularizer(scale=self.params.REG_CONSTANT, scope=None)
             regularization_penalty = tf.contrib.layers.apply_regularization(l2_regularizer, tvars)
-            reg_penalty_word_emb = tf.contrib.layers.apply_regularization(l2_regularizer, [self.word_emb_matrix])
+            if self.params.is_word_trainable:
+                reg_penalty_word_emb = tf.contrib.layers.apply_regularization(l2_regularizer, [self.word_emb_matrix])
+            else:
+                reg_penalty_word_emb = 0
             self.loss = self.loss + regularization_penalty - reg_penalty_word_emb
+
 
         self.prediction = tf.cast(tf.argmax(input=logits, axis=1, name='prediction'), dtype=tf.int32)
         self.probabilities = tf.nn.softmax(logits, name='softmax_probability')
