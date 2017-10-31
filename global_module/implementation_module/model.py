@@ -79,8 +79,13 @@ class CNNClassification():
                                                  activation=self.params.conv_activation,
                                                  name="conv_layer_" + str(layer_num) + '_' + str(filter_width))
 
+            pool_width = self.params.pool_width[layer_num]
+
+            if self.params.if_pool_max:
+                pool_width = conv_output.shape[1].value
+
             pool_output = self.pooling_layer(input=conv_output,
-                                             pool_size=[1, self.params.pool_width[layer_num], 1, 1],
+                                             pool_size=[1, pool_width, 1, 1],
                                              # stride=[1, self.params.pool_width[layer_num], self.params.pool_stride[layer_num], 1],
                                              stride=[1, self.params.MAX_SEQ_LEN + 5 - filter_width + 1, 1, 1],
                                              padding=self.params.pool_padding,
@@ -107,16 +112,65 @@ class CNNClassification():
         pooled_output_flat = tf.nn.dropout(pooled_output_flat, keep_prob=self.params.keep_prob)
 
         dense_layer1 = tf.layers.dense(inputs=pooled_output_flat,
-                                       units=512,
+                                       units=2048,
                                        activation=tf.nn.tanh,
                                        kernel_initializer=tf.contrib.layers.xavier_initializer(),
                                        bias_initializer=tf.constant_initializer(0.01),
                                        name='dense_layer_1')
 
+        dense_layer2 = tf.layers.dense(inputs=dense_layer1,
+                                       units=2048,
+                                       activation=tf.nn.tanh,
+                                       kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                       bias_initializer=tf.constant_initializer(0.01),
+                                       name='dense_layer_2')
+
+        dense_layer3 = tf.layers.dense(inputs=dense_layer2,
+                                       units=1024,
+                                       activation=tf.nn.tanh,
+                                       kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                       bias_initializer=tf.constant_initializer(0.01),
+                                       name='dense_layer_3')
+
+        dense_layer4 = tf.layers.dense(inputs=dense_layer3,
+                                       units=1024,
+                                       activation=tf.nn.tanh,
+                                       kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                       bias_initializer=tf.constant_initializer(0.01),
+                                       name='dense_layer_4')
+
+        dense_layer5 = tf.layers.dense(inputs=dense_layer4,
+                                       units=512,
+                                       activation=tf.nn.tanh,
+                                       kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                       bias_initializer=tf.constant_initializer(0.01),
+                                       name='dense_layer_5')
+
+        dense_layer6 = tf.layers.dense(inputs=dense_layer5,
+                                       units=512,
+                                       activation=tf.nn.tanh,
+                                       kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                       bias_initializer=tf.constant_initializer(0.01),
+                                       name='dense_layer_6')
+
+        dense_layer7 = tf.layers.dense(inputs=dense_layer6,
+                                       units=256,
+                                       activation=tf.nn.tanh,
+                                       kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                       bias_initializer=tf.constant_initializer(0.01),
+                                       name='dense_layer_7')
+
+        dense_layer8 = tf.layers.dense(inputs=dense_layer7,
+                                       units=256,
+                                       activation=tf.nn.tanh,
+                                       kernel_initializer=tf.contrib.layers.xavier_initializer(),
+                                       bias_initializer=tf.constant_initializer(0.01),
+                                       name='dense_layer_8')
+
         # self.last_layer = tf.layers.dense(inputs=dense_layer1, units=self.params.num_classes, activation=tf.nn.relu, name='dense_layer_2')
 
         # # self.last_layer = dense_layer1
-        self.last_layer = tf.nn.dropout(dense_layer1, keep_prob=self.params.keep_prob)
+        self.last_layer = tf.nn.dropout(dense_layer8, keep_prob=self.params.keep_prob)
         # self.last_layer = dense_layer1
 
     def compute_cost(self):

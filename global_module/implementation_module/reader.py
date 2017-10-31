@@ -73,7 +73,7 @@ def generate_id_map(params, data_filename, label_filename, index_arr, dict_obj):
         if  dict_obj.label_dict.has_key(label_file_arr[each_idx].strip()):
             curr_label = dict_obj.label_dict[label_file_arr[each_idx].strip()]
         elif params.mode == 'TE':
-            curr_label = '-1'
+            curr_label = '0'
             label_not_present += 1
 
         curr_seq_token_len, curr_seq_token_id = get_index_string(curr_line, dict_obj.word_dict, params)
